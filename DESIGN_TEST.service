@@ -1,0 +1,15 @@
+[Unit]
+Description=Router Server
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/TestBots/RouterServer/
+ExecStart=/usr/bin/python3 /root/TestBots/RouterServer/DesignWebhook.py
+RestartSec=10
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
