@@ -31,6 +31,7 @@ BOT_9_TOKEN = os.getenv('API_TOKEN_DISC')
 BOT_10_TOKEN = os.getenv('API_TOKEN_DESIGN_TEST')
 BOT_11_TOKEN = os.getenv('API_TOKEN_RITORIKA_TEST')
 BOT_12_TOKEN = os.getenv('API_TOKEN_EDSTYLE')
+BOT_13_TOKEN = os.getenv('API_TOKEN_HECKHAUSEN')
 
 BOT_1_ADDRESS = "http://127.0.0.1:7771"
 BOT_2_ADDRESS = "http://127.0.0.1:7772"
@@ -44,6 +45,7 @@ BOT_9_ADDRESS = "http://127.0.0.1:7779"
 BOT_10_ADDRESS = "http://127.0.0.1:7781"
 BOT_11_ADDRESS = "http://127.0.0.1:7782"
 BOT_12_ADDRESS = "http://127.0.0.1:7783"
+BOT_13_ADDRESS = "http://127.0.0.1:7784"
 
 bot_1 = telebot.TeleBot(BOT_1_TOKEN)
 bot_2 = telebot.TeleBot(BOT_2_TOKEN)
@@ -57,6 +59,7 @@ bot_9 = telebot.TeleBot(BOT_9_TOKEN)
 bot_10 = telebot.TeleBot(BOT_10_TOKEN)
 bot_11 = telebot.TeleBot(BOT_11_TOKEN)
 bot_12 = telebot.TeleBot(BOT_12_TOKEN)
+bot_13 = telebot.TeleBot(BOT_13_TOKEN)
 
 # Описываем наш сервер
 class WebhookServer(object):
@@ -208,6 +211,18 @@ class WebhookServer(object):
         else:
             raise cherrypy.HTTPError(403)
 
+    @cherrypy.expose
+    def Heckhausen(self):
+        if 'content-length' in cherrypy.request.headers and \
+           'content-type' in cherrypy.request.headers and \
+           cherrypy.request.headers['content-type'] == 'application/json':
+            length = int(cherrypy.request.headers['content-length'])
+            json_string = cherrypy.request.body.read(length).decode("utf-8")
+            requests.post(BOT_13_ADDRESS, data=json_string)
+            return ''
+        else:
+            raise cherrypy.HTTPError(403)
+
 
 if __name__ == '__main__':
 
@@ -257,6 +272,10 @@ if __name__ == '__main__':
 
     bot_12.remove_webhook()
     bot_12.set_webhook(url=f'https://{WEBHOOK_HOST}/EDStyle',
+                    certificate=open(WEBHOOK_SSL_CERT, 'r'))
+
+    bot_13.remove_webhook()
+    bot_13.set_webhook(url=f'https://{WEBHOOK_HOST}/Heckhausen',
                     certificate=open(WEBHOOK_SSL_CERT, 'r'))
 
     cherrypy.config.update({
