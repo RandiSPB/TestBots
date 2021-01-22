@@ -4,3 +4,4 @@ logs
 logger.txt
 xlsxs_files
 services_files
+.pem
