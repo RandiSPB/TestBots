@@ -16,7 +16,15 @@ def parse_from_xlsx_data(data):
     pass
 
 
-questions = ()
+questions = ('Он хорошо себя чувствует', 'Он думает: «Это трудно, лучше закончить и доделать попозже»',
+             'Он считает, что справится с этим', 'Он думает: «Я могу гордиться собой, потому что справился с этим»',
+             'Он думает: «Похоже, снова не получится» ', 'Он недоволен тем, что у него получилось', 'Он устал',
+             'Он думает: «Я попрошу лучше кого-нибудь мне помочь»', 'Он думает: «Хорошо бы это у меня получилось»',
+             'Он думает, что все сделал правильно', 'Он боится, что что-то сделал не так', 'Это ему не нравится',
+             'Он не хочет, чтобы у него плохо получилось', 'Он хочет сделать лучше остальных',
+             'Он думает: «Я лучше сделаю что-нибудь потруднее»', 'Он предпочитает ничего не делать',
+             'Он думает: «Если это трудно, то мне придется поработать дольше остальных»',
+             'Он думает, что не сумеет сделать это')
 
 
 class HeckHausenTest:
@@ -38,11 +46,13 @@ class HeckHausenTest:
         res = [0, 0, 0]
         for q_num in self.score_storage.keys():
             if q_num in (4, 9, 14, 15, 17):
-                res[0] += 1
+                res[0] += self.score_storage[q_num]
             elif q_num in (5, 7, 11, 13):
-                res[2] += 1
+                res[2] += self.score_storage[q_num]
+            elif q_num in (2, 6, 8, 12, 16, 18):
+                res[1] += self.score_storage[q_num]
             else:
-                res[1] += 1
+                continue
         return tuple(res)
 
     def return_cur_text(self):
@@ -85,16 +95,23 @@ class HeckHausenTest:
             msg_txt = 'Напишите через запятую номера утверждений, которые, по Вашему мнению, <b>не подходят</b> к ' \
                       'данному рисунку.\n\nНапример:\n2,3,5,12,15,17\n\n<i>Вы можете выбрать любое количество ' \
                       'утверждений или не проставить их совсем. В таком случае просто поставьте дефис</i>'
-            self.bot.send_message(msg.chat.id, text=msg_txt)
+            self.bot.send_message(msg.chat.id, text=msg_txt, parse_mode='html')
             self.bot.register_next_step_handler(msg, self.process_wrong_answer)
-        except Exception as error:
-            self.bot.send_message(chat_id=msg.chat.id, text=error)
+        except (ValueError, TypeError):
             if msg.text == '-':
-                return
+                msg_txt = 'Напишите через запятую номера утверждений, которые, по Вашему мнению, <b>не подходят</b> к ' \
+                          'данному рисунку.\n\nНапример:\n2,3,5,12,15,17\n\n<i>Вы можете выбрать любое количество ' \
+                          'утверждений или не проставить их совсем. В таком случае просто поставьте дефис</i>'
+                self.bot.send_message(msg.chat.id, text=msg_txt, parse_mode='html')
+                self.bot.register_next_step_handler(msg, self.process_wrong_answer)
             else:
                 self.bot.send_message(chat_id=msg.chat.id, text='Пожалуйста, убедитесь что ответ введен согласно всем'
                                                                 ' правилам!')
                 self.bot.register_next_step_handler(msg, self.process_right_answer)
+        except KeyError:
+            self.bot.send_message(chat_id=msg.chat.id, text='Вам дано всего-лишь 18 вопросов с номера 1 по номер 18!'
+                                                            'Пожалуйста не выходите за данный диапазон!')
+            self.bot.register_next_step_handler(msg, self.process_right_answer)
 
     def process_wrong_answer(self, msg):
         self.cur_picture_ptr += 1
@@ -106,13 +123,14 @@ class HeckHausenTest:
             with open(os.path.join('content', 'Heckhausen', f'{self.cur_picture_ptr}.jpg'), 'rb') as emotion_photo:
                 self.bot.send_photo(chat_id, emotion_photo, caption=f'<b>Изображение {self.cur_picture_ptr} из 6</b>',
                                     parse_mode='html')
-                self.buffer = self.bot.send_message(chat_id=chat_id, text=self.return_question_list())
+                self.buffer = self.bot.send_message(chat_id=chat_id, text=self.return_question_list(),
+                                                    parse_mode='html')
                 msg_txt = 'Напишите через запятую номера утверждений, которые, по Вашему мнению, <b>подходят</b> к ' \
                           'данному рисунку.\n\nНапример:\n1,6,9,13,18\n\n<i>Вы можете выбрать любое количество ' \
                           'утверждений или не проставить их совсем. В таком случае просто поставьте дефис</i>'
-                self.bot.send_message(chat_id, text=msg_txt)
+                self.bot.send_message(chat_id, text=msg_txt, parse_mode='html')
                 self.bot.register_next_step_handler(self.buffer, self.process_right_answer)
-        except (IndexError, FileNotFoundError):
+        except (IndexError, FileNotFoundError) as error:
             self.finish_test(chat_id)
 
     def finish_test(self, chat_id):
@@ -152,7 +170,6 @@ class SimpleUserHeckHausenTest:
         date = datetime.datetime.now()
         date += datetime.timedelta(seconds=3600 * 3)
         key = f'SW{date.month}{date.day}{str(date.year)[2::]}'
-        print(key)
         if msg.text == key:
             with open('logger.txt', 'a') as logger:
                 logger.write(f'[Тестобот "Хекхаузен"]: Пользователь с id: {msg.chat.id} Авторизация прошла успешно!'
