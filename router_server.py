@@ -6,6 +6,7 @@ import requests
 import telebot
 import os
 from dotenv import load_dotenv
+from logger import logger_request
 
 
 env_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -212,6 +213,7 @@ class WebhookServer(object):
             raise cherrypy.HTTPError(403)
 
     @cherrypy.expose
+    @logger_request
     def Heckhausen(self):
         if 'content-length' in cherrypy.request.headers and \
            'content-type' in cherrypy.request.headers and \
