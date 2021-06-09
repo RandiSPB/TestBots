@@ -104,6 +104,8 @@ class EDSTest:
                ' обучения на <i>данный момент:</i>\n\n<b>Активатор - {0} ({4})\nРефлектор - {1} ({5})\n' \
                'Теоретик - {2} ({6})\nПрагматик - {3} ({7})</b>\n\n📌Успехов!'.format(*self.types_scores.values(),
                                                                                 *self.return_preference())
+        with open('edstyle.txt', 'a') as res_file:
+            res_file.write(f'{chat_id} : {text}\n\n')
         markup = types.InlineKeyboardMarkup(row_width=1)
         markup.add(types.InlineKeyboardButton(text='Хочу пройти еще раз', callback_data='RESTART_TEST'))
         self.bot.send_message(chat_id, text, reply_markup=markup, parse_mode='html')
